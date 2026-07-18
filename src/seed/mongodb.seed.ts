@@ -16,7 +16,7 @@ export async function seedMongoDB(): Promise<void> {
     userId: "jane-placeholder", // updated in Phase 3 to real UUID
     sessionToken: faker.string.alphanumeric(64),
     loginAt: faker.date.past({ years: 1 }),
-    expiresAt: faker.date.future({ years: 0.1 }),
+    expiresAt: faker.date.future({ years: 1 }),
     ipAddress: faker.internet.ip(),
     userAgent: faker.internet.userAgent(),
     isActive: i < 2, // 2 active sessions
@@ -36,7 +36,7 @@ export async function seedMongoDB(): Promise<void> {
     userId: faker.string.uuid(),
     sessionToken: faker.string.alphanumeric(64),
     loginAt: faker.date.past({ years: 1 }),
-    expiresAt: faker.date.future({ years: 0.1 }),
+    expiresAt: faker.date.future({ years: 1 }),
     ipAddress: faker.internet.ip(),
     userAgent: faker.internet.userAgent(),
     isActive: faker.datatype.boolean(),

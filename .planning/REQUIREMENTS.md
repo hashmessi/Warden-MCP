@@ -68,11 +68,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFR-01**: Postgres database is seeded with synthetic user data (~500 rows across 4-5 tables)
-- [ ] **INFR-02**: MongoDB is seeded with synthetic session/log data
-- [ ] **INFR-03**: Mock payment ledger is seeded with synthetic billing/subscription data
-- [ ] **INFR-04**: Seed script is idempotent and runs in under 5 seconds
-- [ ] **INFR-05**: Project includes Docker Compose for local development with all databases
+- [x] **INFR-01**: Postgres database is seeded with synthetic user data (~500 rows across 4-5 tables)
+- [x] **INFR-02**: MongoDB is seeded with synthetic session/log data
+- [x] **INFR-03**: Mock payment ledger is seeded with synthetic billing/subscription data
+- [x] **INFR-04**: Seed script is idempotent and runs in under 5 seconds
+- [x] **INFR-05**: Project includes Docker Compose for local development with all databases
 
 ## v2 Requirements
 
@@ -111,11 +111,11 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFR-01 | Phase 1 | Pending |
-| INFR-02 | Phase 1 | Pending |
-| INFR-03 | Phase 1 | Pending |
-| INFR-04 | Phase 1 | Pending |
-| INFR-05 | Phase 1 | Pending |
+| INFR-01 | Phase 1 | Complete |
+| INFR-02 | Phase 1 | Complete |
+| INFR-03 | Phase 1 | Complete |
+| INFR-04 | Phase 1 | Complete |
+| INFR-05 | Phase 1 | Complete |
 | AUDT-01 | Phase 2 | Pending |
 | AUDT-02 | Phase 2 | Pending |
 | AUDT-03 | Phase 2 | Pending |

@@ -116,9 +116,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | INFR-03 | Phase 1 | Complete |
 | INFR-04 | Phase 1 | Complete |
 | INFR-05 | Phase 1 | Complete |
-| AUDT-01 | Phase 2 | Pending |
-| AUDT-02 | Phase 2 | Pending |
-| AUDT-03 | Phase 2 | Pending |
+| AUDT-01 | Phase 2 | Complete |
+| AUDT-02 | Phase 2 | Complete |
+| AUDT-03 | Phase 2 | Complete |
 | MCP-01 | Phase 3 | Pending |
 | MCP-06 | Phase 3 | Pending |
 | DISC-01 | Phase 3 | Pending |

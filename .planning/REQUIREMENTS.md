@@ -126,11 +126,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | DISC-03 | Phase 3 | Complete |
 | DISC-04 | Phase 3 | Complete |
 | DISC-05 | Phase 3 | Complete |
-| IMPT-01 | Phase 4 | Pending |
-| IMPT-02 | Phase 4 | Pending |
-| IMPT-03 | Phase 4 | Pending |
-| IMPT-04 | Phase 4 | Pending |
-| MCP-02 | Phase 4 | Pending |
+| IMPT-01 | Phase 4 | Complete |
+| IMPT-02 | Phase 4 | Complete |
+| IMPT-03 | Phase 4 | Complete |
+| IMPT-04 | Phase 4 | Complete |
+| MCP-02 | Phase 4 | Complete |
 | APPR-01 | Phase 5 | Pending |
 | APPR-02 | Phase 5 | Pending |
 | APPR-03 | Phase 5 | Pending |

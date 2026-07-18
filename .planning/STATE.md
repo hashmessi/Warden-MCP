@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-14)
 
 **Core value:** Every irreversible action requires a human decision, and every action is independently auditable with cryptographic proof
-**Current focus:** Phase 03 — MCP Server & Data Scanner
+**Current focus:** Phase 04 — Impact Report Engine
 
 ## Current Milestone
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 |-------|------|--------|
 | 1 | Foundation & Data Layer | ✅ Complete |
 | 2 | Audit Logger (Hash Chain) | ✅ Complete |
-| 3 | MCP Server & Data Scanner | 🔲 Not Started |
+| 3 | MCP Server & Data Scanner | ✅ Complete |
 | 4 | Impact Report Engine | 🔲 Not Started |
 | 5 | Approval Gate & Dashboard | 🔲 Not Started |
 | 6 | Execute, Snapshot & Rollback | 🔲 Not Started |
@@ -45,6 +45,7 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 | Generic compliance framing (not GDPR/DPDP-specific) | Init | 2026-07-14 |
 | Vercel + Railway for deployment | Init | 2026-07-14 |
 | `audit_log` prev_hash integrity enforced in SQL via WITH/SELECT | Phase 2 | 2026-07-19 |
+| MCP server uses StdioServerTransport; scan_subject fan-out via Promise.allSettled | Phase 3 | 2026-07-19 |
 
 ---
 *Last updated: 2026-07-19 after Phase 2 completion — Audit Logger with SHA-256 hash chaining, ontology, and test suite*

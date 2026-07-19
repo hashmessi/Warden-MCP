@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-14)
 
 **Core value:** Every irreversible action requires a human decision, and every action is independently auditable with cryptographic proof
-**Current focus:** Phase 05 — Approval Gate & Dashboard
+**Current focus:** Phase 06 — Execute, Snapshot & Rollback
 
 ## Current Milestone
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 | 2 | Audit Logger (Hash Chain) | ✅ Complete |
 | 3 | MCP Server & Data Scanner | ✅ Complete |
 | 4 | Impact Report Engine | ✅ Complete |
-| 5 | Approval Gate & Dashboard | 🔲 Not Started |
+| 5 | Approval Gate & Dashboard | ✅ Complete |
 | 6 | Execute, Snapshot & Rollback | 🔲 Not Started |
 | 7 | Integrity Verification & Polish | 🔲 Not Started |
 
@@ -47,6 +47,7 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 | `audit_log` prev_hash integrity enforced in SQL via WITH/SELECT | Phase 2 | 2026-07-19 |
 | MCP server uses StdioServerTransport; scan_subject fan-out via Promise.allSettled | Phase 3 | 2026-07-19 |
 | Impact report engine: deterministic template + optional LLM enrichment; riskLevel from hasOrphanRisk | Phase 4 | 2026-07-19 |
+| Approval gate: in-memory store, UUID tokens, single-use idempotency; Next.js 16 ops console dashboard | Phase 5 | 2026-07-19 |
 
 ---
 *Last updated: 2026-07-19 after Phase 2 completion — Audit Logger with SHA-256 hash chaining, ontology, and test suite*

@@ -121,19 +121,24 @@ Audit log → every step is SHA-256 hash-chained, tamper-evident
 
 ### Prerequisites
 
-```bash
-# Start databases
+```powershell
+# 1. Start databases (Docker Desktop must be running)
 docker-compose up -d
 
-# Seed synthetic data (jane.doe@email.com has data across all 3 systems)
+# 2. Wait for databases to be healthy, then seed synthetic data
 npm run seed
 
-# Start dashboard (localhost:3000)
-cd dashboard && npm run dev
+# 3. Start the dashboard (in a separate terminal, from the dashboard/ folder)
+cd dashboard
+npm run dev
+# → Dashboard available at http://localhost:3000
 
-# Start MCP server via MCP Inspector (separate terminal)
+# 4. Start the MCP server for inspection (in a separate terminal, from project root)
 npx @modelcontextprotocol/inspector tsx src/index.ts
+# → MCP Inspector at http://localhost:6274
 ```
+
+> **Note for Windows users:** Use separate PowerShell terminals for the dashboard and MCP server — they're two separate long-running processes.
 
 ### The Full Flow
 

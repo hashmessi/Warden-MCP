@@ -50,10 +50,10 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 | Approval gate: in-memory store, UUID tokens, single-use idempotency; Next.js 16 ops console dashboard | Phase 5 | 2026-07-19 |
 
 ---
-*Last updated: 2026-07-23 after adding todo for codebase review remediation*
+*Last updated: 2026-07-23 after starting work on codebase review remediation todo*
 
 ## Accumulated Context
 
 ### Pending Todos
-- [ ] Remediate 6 Codebase Review Flaws (`.planning/todos/pending/2026-07-23-remediate-6-codebase-review-flaws.md`)
+None
 

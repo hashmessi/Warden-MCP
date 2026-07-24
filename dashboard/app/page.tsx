@@ -99,23 +99,23 @@ const SYSTEM_LABELS: Record<string, string> = {
 };
 
 const SENSITIVITY_COLORS: Record<string, string> = {
-  pii: "#f59e0b",
-  financial: "#f43f5e",
-  behavioral: "#818cf8",
-  system: "#64748b",
+  pii: "#C7A669",
+  financial: "#B4797C",
+  behavioral: "#7E93A8",
+  system: "#55565B",
 };
 
 const ACTION_COLORS: Record<string, string> = {
-  SCAN: "#818cf8",
-  APPROVAL_REQUESTED: "#f59e0b",
-  APPROVED: "#10b981",
-  DENIED: "#f43f5e",
-  EXECUTION_STARTED: "#60a5fa",
-  SNAPSHOT_TAKEN: "#a78bfa",
-  EXECUTION_COMPLETED: "#34d399",
-  EXECUTION_FAILED: "#f87171",
-  ROLLBACK_STARTED: "#fb923c",
-  ROLLBACK_COMPLETED: "#fb923c",
+  SCAN: "#7E93A8",
+  APPROVAL_REQUESTED: "#C7A669",
+  APPROVED: "#93AD97",
+  DENIED: "#B4797C",
+  EXECUTION_STARTED: "#7E93A8",
+  SNAPSHOT_TAKEN: "#8D8E93",
+  EXECUTION_COMPLETED: "#93AD97",
+  EXECUTION_FAILED: "#B4797C",
+  ROLLBACK_STARTED: "#C7A669",
+  ROLLBACK_COMPLETED: "#C7A669",
 };
 
 // ---------------------------------------------------------------------------
@@ -157,17 +157,17 @@ function VerifyModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="glass-card modal-content animate-fadein">
+      <div className="modal-content animate-fadein">
         <div className="modal-header">
           <div>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>🔐 Audit Chain Verification</h3>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 300, fontFamily: "var(--font-display)" }}>🔐 Audit Chain Verification</h3>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text-secondary)" }}>Walking SHA-256 hash chain entry by entry</p>
           </div>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close verification modal">×</button>
         </div>
         {phase === "counting" && (
           <div style={{ textAlign: "center", padding: "48px 0" }}>
-            <div className="verify-counting" style={{ fontSize: 36, fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "#818cf8" }}>
+            <div className="verify-counting" style={{ fontSize: 36, fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent-ivory)" }}>
               {count}/{total > 0 ? total : "…"} entries checked
             </div>
             <div style={{ marginTop: 14, color: "var(--text-secondary)", fontSize: 13 }}>Verifying hash chain integrity…</div>
@@ -268,7 +268,7 @@ function ImpactPanel({ report }: { report: ImpactReport }) {
         </span>
       </div>
       <div className="impact-summary">
-        <strong style={{ color: "#fff" }}>{report.sections.dataFound.totalRecords}</strong> records found across{" "}
+        <strong style={{ color: "var(--accent-ivory)" }}>{report.sections.dataFound.totalRecords}</strong> records found across{" "}
         <strong>{report.sections.dataFound.systems.length}</strong> systems
       </div>
       {report.sections.dependencies.hasRisks && (
@@ -597,7 +597,7 @@ export default function DashboardPage() {
             {(step !== "idle") && (
               <div ref={el => { stepRefs.current["scan"] = el; }} className="flow-step">
                 <div className="step-header">
-                  <div className="step-number">1</div>
+                  <div className={`step-number${step === "scanning" ? " step-number-active" : ""}`}>1</div>
                   <div className="step-title">DISCOVERY — Multi-System Scan</div>
                   {step === "scanning" && <span className="step-badge-loading">Scanning…</span>}
                   {step !== "scanning" && scanResult && <span className="step-badge-done">✓ Complete</span>}
@@ -646,7 +646,7 @@ export default function DashboardPage() {
               <div ref={el => { stepRefs.current["approve"] = el; }} className="flow-step animate-fadein">
                 <div className="step-header">
                   <div className="step-number">3</div>
-                  <div className="step-title">APPROVAL GATE — Human Decision Required</div>
+                  <div className="step-title">APPROVAL GATE — Review & Authorize</div>
                 </div>
                 <div className="approval-gate">
                   <div className="approval-persona">
@@ -673,7 +673,7 @@ export default function DashboardPage() {
             {(step === "approving" || step === "executing" || step === "executed" || step === "rolling-back" || step === "rolled-back") && (
               <div ref={el => { stepRefs.current["execute"] = el; }} className="flow-step animate-fadein">
                 <div className="step-header">
-                  <div className="step-number">4</div>
+                  <div className={`step-number${(step === "approving" || step === "executing") ? " step-number-active" : ""}`}>4</div>
                   <div className="step-title">EXECUTION — Snapshot, Delete, Verify</div>
                   {step === "executed" || step === "rolling-back" || step === "rolled-back" ? <span className="step-badge-done">✓ Complete</span> : <span className="step-badge-loading">In progress…</span>}
                 </div>
@@ -711,7 +711,7 @@ export default function DashboardPage() {
             {(step === "rolling-back" || step === "rolled-back") && (
               <div ref={el => { stepRefs.current["rollback-progress"] = el; }} className="flow-step animate-fadein">
                 <div className="step-header">
-                  <div className="step-number rollback-number">5</div>
+                  <div className={`step-number rollback-number${step === "rolling-back" ? " step-number-active" : ""}`}>5</div>
                   <div className="step-title rollback-title">ROLLBACK — Restoring from Snapshot</div>
                   {step === "rolled-back" ? <span className="step-badge-done">✓ Complete</span> : <span className="step-badge-loading">Restoring…</span>}
                 </div>
@@ -758,7 +758,7 @@ export default function DashboardPage() {
           <aside className="audit-sidebar">
             <div className="audit-sidebar-header">
               <div className="audit-sidebar-title">AUDIT LOG</div>
-              <div className="audit-sidebar-count">{auditEntries.length} entries · live</div>
+              <div className="audit-sidebar-count">{auditEntries.length} entries</div>
             </div>
             <div className="audit-sidebar-feed">
               {auditEntries.length === 0 && (

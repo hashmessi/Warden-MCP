@@ -1,27 +1,5 @@
 [
   {
-    "id": "2c781232-c5ed-4582-bb09-eb2936f6de13",
-    "userId": "jane-placeholder",
-    "email": "jane.doe@email.com",
-    "amount": 29.99,
-    "currency": "USD",
-    "status": "paid",
-    "description": "Pro Plan — Monthly",
-    "createdAt": "2026-06-24T08:52:35.773Z",
-    "subscriptionId": "sub-pro-jane"
-  },
-  {
-    "id": "9a0b0ca1-78b8-4a34-a04a-59c6d36003aa",
-    "userId": "jane-placeholder",
-    "email": "jane.doe@email.com",
-    "amount": 9.99,
-    "currency": "USD",
-    "status": "paid",
-    "description": "Storage Add-on — Monthly",
-    "createdAt": "2026-07-09T08:52:35.774Z",
-    "subscriptionId": "sub-storage-jane"
-  },
-  {
     "id": "478503db-33a0-43cc-bc52-54cefa0a02b8",
     "userId": "779223ae-ec1d-4c0b-941b-5a2d1c62ca43",
     "email": "sophia.streich64@gmail.com",
@@ -1605,5 +1583,27 @@
     "status": "refunded",
     "description": "Tasty Steel Car",
     "createdAt": "2025-09-13T13:16:09.888Z"
+  },
+  {
+    "id": "2c781232-c5ed-4582-bb09-eb2936f6de13",
+    "email": "jane.doe@email.com",
+    "amount": 29.99,
+    "status": "paid",
+    "userId": "jane-placeholder",
+    "currency": "USD",
+    "createdAt": "2026-06-24T08:52:35.773Z",
+    "description": "Pro Plan — Monthly",
+    "subscriptionId": "sub-pro-jane"
+  },
+  {
+    "id": "9a0b0ca1-78b8-4a34-a04a-59c6d36003aa",
+    "email": "jane.doe@email.com",
+    "amount": 9.99,
+    "status": "paid",
+    "userId": "jane-placeholder",
+    "currency": "USD",
+    "createdAt": "2026-07-09T08:52:35.774Z",
+    "description": "Storage Add-on — Monthly",
+    "subscriptionId": "sub-storage-jane"
   }
 ]

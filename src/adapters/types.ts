@@ -66,6 +66,23 @@ export interface DataAdapter {
   ): Promise<DeletionResult[]>;
 
   /**
+   * Snapshot all records matching the identifier to the central snapshot store.
+   * Returns the number of records snapshotted.
+   */
+  snapshotRecords(
+    identifier: string,
+    executionId: string
+  ): Promise<number>;
+
+  /**
+   * Restore all records from the central snapshot store for a given executionId.
+   * Returns the number of records restored.
+   */
+  restoreRecords(
+    executionId: string
+  ): Promise<number>;
+
+  /**
    * Return schema info for display in impact report (Phase 4).
    */
   getSchema(): Promise<SchemaInfo>;

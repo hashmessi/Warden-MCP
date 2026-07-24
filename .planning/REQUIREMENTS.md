@@ -141,19 +141,19 @@ Deferred to future release. Tracked but not in current roadmap.
 | DASH-02 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Complete |
 | DASH-07 | Phase 5 | Complete |
-| EXEC-01 | Phase 6 | Pending |
-| EXEC-02 | Phase 6 | Pending |
-| EXEC-03 | Phase 6 | Pending |
-| EXEC-04 | Phase 6 | Pending |
-| EXEC-05 | Phase 6 | Pending |
-| EXEC-06 | Phase 6 | Pending |
-| MCP-04 | Phase 6 | Pending |
-| MCP-05 | Phase 6 | Pending |
-| DASH-04 | Phase 6 | Pending |
-| AUDT-04 | Phase 7 | Pending |
-| AUDT-05 | Phase 7 | Pending |
-| DASH-05 | Phase 7 | Pending |
-| DASH-06 | Phase 7 | Pending |
+| EXEC-01 | Phase 6 | Complete |
+| EXEC-02 | Phase 6 | Complete |
+| EXEC-03 | Phase 6 | Complete |
+| EXEC-04 | Phase 6 | Complete |
+| EXEC-05 | Phase 6 | Complete |
+| EXEC-06 | Phase 6 | Complete |
+| MCP-04 | Phase 6 | Complete |
+| MCP-05 | Phase 6 | Complete |
+| DASH-04 | Phase 6 | Complete |
+| AUDT-04 | Phase 7 | Complete |
+| AUDT-05 | Phase 7 | Complete |
+| DASH-05 | Phase 7 | Complete |
+| DASH-06 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 42 total

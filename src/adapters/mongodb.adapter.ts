@@ -1,4 +1,6 @@
+import { ObjectId } from "mongodb";
 import { getMongoDb } from "../db/mongodb.js";
+import { query } from "../db/postgres.js";
 import type {
   DataAdapter,
   DataHit,
@@ -56,6 +58,60 @@ export class MongoDbAdapter implements DataAdapter {
     }
 
     return hits;
+  }
+
+  async snapshotRecords(
+    identifier: string,
+    executionId: string
+  ): Promise<number> {
+    const db = await getMongoDb();
+    const filter = { $or: [{ email: identifier }, { userId: identifier }] };
+
+    const sessions = await db.collection("sessions").find(filter).toArray();
+    const activityLogs = await db.collection("activity_logs").find(filter).toArray();
+
+    let count = 0;
+    for (const session of sessions) {
+      await query(
+        `INSERT INTO snapshots (execution_id, source_system, record_id, data) VALUES ($1, $2, $3, $4)`,
+        [executionId, 'mongodb:sessions', session._id.toString(), JSON.stringify(session)]
+      );
+      count++;
+    }
+
+    for (const log of activityLogs) {
+      await query(
+        `INSERT INTO snapshots (execution_id, source_system, record_id, data) VALUES ($1, $2, $3, $4)`,
+        [executionId, 'mongodb:activity_logs', log._id.toString(), JSON.stringify(log)]
+      );
+      count++;
+    }
+
+    return count;
+  }
+
+  async restoreRecords(executionId: string): Promise<number> {
+    const db = await getMongoDb();
+    const snapshots = await query<{ record_id: string; data: any; source_system: string }>(
+      `SELECT record_id, data, source_system FROM snapshots WHERE execution_id = $1 AND source_system LIKE 'mongodb:%'`,
+      [executionId]
+    );
+
+    let count = 0;
+    for (const snap of snapshots) {
+      const collection = snap.source_system.split(':')[1];
+      const data = typeof snap.data === 'string' ? JSON.parse(snap.data) : snap.data;
+      if (data._id && typeof data._id === 'string' && ObjectId.isValid(data._id)) {
+        data._id = new ObjectId(data._id);
+      }
+      try {
+        await db.collection(collection).replaceOne({ _id: data._id }, data, { upsert: true });
+        count++;
+      } catch (err) {
+        console.error(`[mongodb] Failed to restore to ${collection}:`, err);
+      }
+    }
+    return count;
   }
 
   async deleteRecords(

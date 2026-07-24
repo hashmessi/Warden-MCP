@@ -64,6 +64,26 @@ export async function seedPostgres(): Promise<void> {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS execution_steps (
+        id BIGSERIAL PRIMARY KEY,
+        execution_id UUID NOT NULL,
+        step_name VARCHAR(100) NOT NULL,
+        system VARCHAR(50) NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        details JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_log_hash ON audit_log(hash);
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_log_prev_hash ON audit_log(prev_hash) WHERE prev_hash != 'GENESIS';
+    `);
+
     // === CLEAR EXISTING DATA (idempotent) ===
     await client.query(`DELETE FROM user_activity`);
     await client.query(`DELETE FROM subscriptions`);

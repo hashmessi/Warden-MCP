@@ -97,6 +97,63 @@ export class PostgresAdapter implements DataAdapter {
     return hits;
   }
 
+  async snapshotRecords(
+    identifier: string,
+    executionId: string
+  ): Promise<number> {
+    const users = await query<{ id: string }>(`SELECT id FROM users WHERE email = $1`, [identifier]);
+    if (users.length === 0) return 0;
+    const userId = users[0].id;
+
+    // Snapshot user
+    const userRows = await query(`SELECT * FROM users WHERE id = $1`, [userId]);
+    // Snapshot profiles
+    const profileRows = await query(`SELECT * FROM user_profiles WHERE user_id = $1`, [userId]);
+    // Snapshot subscriptions
+    const subRows = await query(`SELECT * FROM subscriptions WHERE user_id = $1`, [userId]);
+    // Snapshot activity
+    const activityRows = await query(`SELECT * FROM user_activity WHERE user_id = $1`, [userId]);
+
+    const allRecords = [
+      ...userRows.map(r => ({ table: 'users', data: r })),
+      ...profileRows.map(r => ({ table: 'user_profiles', data: r })),
+      ...subRows.map(r => ({ table: 'subscriptions', data: r })),
+      ...activityRows.map(r => ({ table: 'user_activity', data: r }))
+    ];
+
+    for (const record of allRecords) {
+      await query(
+        `INSERT INTO snapshots (execution_id, source_system, record_id, data) VALUES ($1, $2, $3, $4)`,
+        [executionId, 'postgres', record.table, JSON.stringify(record.data)]
+      );
+    }
+    return allRecords.length;
+  }
+
+  async restoreRecords(executionId: string): Promise<number> {
+    const snapshots = await query<{ record_id: string; data: any }>(
+      `SELECT record_id, data FROM snapshots WHERE execution_id = $1 AND source_system = 'postgres'`,
+      [executionId]
+    );
+
+    let restored = 0;
+    for (const snap of snapshots) {
+      const table = snap.record_id;
+      const row = snap.data;
+      const columns = Object.keys(row).join(', ');
+      const values = Object.values(row);
+      const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+      
+      try {
+        await query(`INSERT INTO ${table} (${columns}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`, values);
+        restored++;
+      } catch (err) {
+        console.error(`[postgres] Failed to restore to ${table}:`, err);
+      }
+    }
+    return restored;
+  }
+
   async deleteRecords(
     identifier: string,
     mode: "delete" | "anonymize"
@@ -104,15 +161,15 @@ export class PostgresAdapter implements DataAdapter {
     const results: DeletionResult[] = [];
 
     if (mode === "delete") {
-      // Soft delete — set is_deleted flag
+      // Hard delete — cascades to profiles, subscriptions, and activity
       const r = await query<{ id: string }>(
-        `UPDATE users SET is_deleted = TRUE WHERE email = $1 RETURNING id`,
+        `DELETE FROM users WHERE email = $1 RETURNING id`,
         [identifier]
       );
       results.push({
         sourceSystem: "postgres",
-        table: "users",
-        affected: r.length,
+        table: "users (and cascaded tables)",
+        affected: r.length > 0 ? 4 : 0, // Approx tables affected
         mode: "delete",
       });
     } else {
@@ -125,9 +182,15 @@ export class PostgresAdapter implements DataAdapter {
          RETURNING id`,
         [identifier]
       );
+      if (r.length > 0) {
+        await query(
+          `UPDATE user_profiles SET phone = 'REDACTED', address = 'REDACTED', date_of_birth = NULL WHERE user_id = $1`,
+          [r[0].id]
+        );
+      }
       results.push({
         sourceSystem: "postgres",
-        table: "users",
+        table: "users and profiles",
         affected: r.length,
         mode: "anonymize",
       });

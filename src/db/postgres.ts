@@ -19,6 +19,68 @@ export function getPool(): Pool {
   return pool;
 }
 
+export async function initDb(): Promise<void> {
+  await withClient(async (client) => {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS approvals (
+        token UUID PRIMARY KEY,
+        scan_id VARCHAR(255) NOT NULL,
+        action VARCHAR(50) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+        impact_report JSONB,
+        execution_id UUID,
+        requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ,
+        resolved_by VARCHAR(255)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS snapshots (
+        id BIGSERIAL PRIMARY KEY,
+        execution_id UUID NOT NULL,
+        source_system VARCHAR(50) NOT NULL,
+        record_id VARCHAR(255) NOT NULL,
+        data JSONB NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS execution_steps (
+        id BIGSERIAL PRIMARY KEY,
+        execution_id UUID NOT NULL,
+        step_name VARCHAR(100) NOT NULL,
+        system VARCHAR(50) NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        details JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id BIGSERIAL PRIMARY KEY,
+        timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        action VARCHAR(100) NOT NULL,
+        actor VARCHAR(255) NOT NULL,
+        subject_hash VARCHAR(64),
+        details JSONB,
+        prev_hash VARCHAR(64),
+        hash VARCHAR(64) NOT NULL
+      )
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_log_hash ON audit_log(hash);
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_log_prev_hash ON audit_log(prev_hash) WHERE prev_hash != 'GENESIS';
+    `);
+  });
+}
+
 export async function query<T = unknown>(
   sql: string,
   params?: unknown[]

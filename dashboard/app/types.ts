@@ -1,7 +1,7 @@
 // Shared types — mirrors src/approval/types.ts
 // Dashboard cannot import from src/ directly (separate Next.js app)
 
-export type ApprovalStatus = "pending" | "approved" | "denied";
+export type ApprovalStatus = "pending" | "approved" | "denied" | "executed" | "rolled_back";
 export type ExecutionAction = "delete" | "anonymize";
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
@@ -9,8 +9,10 @@ export interface PendingAction {
   token: string;
   scanId: string;
   reportId?: string;
+  impactReport?: ImpactReportSummary;
   action: ExecutionAction;
   status: ApprovalStatus;
+  executionId?: string;
   requestedAt: string;
   resolvedAt?: string;
   resolvedBy?: string;

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { scanSubject, getScanResult } from "./scanner.js";
 import { generateImpactReport } from "./impact/report.js";
 import { createPendingAction } from "./approval/store.js";
+import { initDb } from "./db/postgres.js";
 
 const server = new Server(
   { name: "warden", version: "1.0.0" },
@@ -30,6 +31,14 @@ const GenerateReportSchema = z.object({
 const RequestExecutionSchema = z.object({
   scan_id: z.string().min(1),
   action: z.enum(["delete", "anonymize"]),
+});
+
+const ExecuteApprovedActionSchema = z.object({
+  token: z.string().min(1),
+});
+
+const RollbackActionSchema = z.object({
+  execution_id: z.string().min(1),
 });
 
 // --- Tool Registry ---
@@ -72,10 +81,39 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: {
         type: "object" as const,
         properties: {
-          scan_id: { type: "string", description: "The scanId from a previous scan_subject call" },
-          action: { type: "string", enum: ["delete", "anonymize"], description: "Whether to delete or anonymize the data" },
+          scan_id: {
+            type: "string",
+            description: "The scanId representing the data to operate on",
+          },
+          action: {
+            type: "string",
+            enum: ["delete", "anonymize"],
+            description: "The action to request (delete or anonymize)",
+          },
         },
         required: ["scan_id", "action"],
+      },
+    },
+    {
+      name: "execute_approved_action",
+      description: "Execute a previously approved action. This will snapshot data and then mutate it across all systems.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          token: { type: "string" },
+        },
+        required: ["token"],
+      },
+    },
+    {
+      name: "rollback_action",
+      description: "Rollback a previously executed action using its snapshot.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          execution_id: { type: "string" },
+        },
+        required: ["execution_id"],
       },
     },
   ],
@@ -165,7 +203,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     try {
-      const pending = await createPendingAction(parsed.data.scan_id, parsed.data.action);
+      const report = await generateImpactReport(scanResult);
+      const pending = await createPendingAction(parsed.data.scan_id, parsed.data.action, report);
       return {
         content: [{
           type: "text" as const,
@@ -182,6 +221,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         isError: true,
       };
     }
+  } else if (name === "execute_approved_action") {
+    const parsed = ExecuteApprovedActionSchema.safeParse(args);
+    if (!parsed.success) {
+      return { content: [{ type: "text" as const, text: `Invalid input: ${parsed.error.message}` }], isError: true };
+    }
+
+    try {
+      const { executeAction } = await import("./execution/engine.js");
+      const executionId = await executeAction(parsed.data.token);
+      return {
+        content: [{
+          type: "text" as const,
+          text: `Action executed successfully.\nExecution ID: ${executionId}\nData was snapshotted and can be rolled back.`,
+        }],
+      };
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Execution failed: ${(err as Error).message}` }], isError: true };
+    }
+  } else if (name === "rollback_action") {
+    const parsed = RollbackActionSchema.safeParse(args);
+    if (!parsed.success) {
+      return { content: [{ type: "text" as const, text: `Invalid input: ${parsed.error.message}` }], isError: true };
+    }
+
+    try {
+      const { rollbackAction } = await import("./execution/engine.js");
+      await rollbackAction(parsed.data.execution_id);
+      return {
+        content: [{ type: "text" as const, text: `Execution ${parsed.data.execution_id} rolled back successfully.` }],
+      };
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Rollback failed: ${(err as Error).message}` }], isError: true };
+    }
   }
 
   return {
@@ -192,6 +264,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // --- Start ---
 async function main() {
+  await initDb();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("[warden] MCP server running on stdio");

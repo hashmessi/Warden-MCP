@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { listActions, createAction } from "../../lib/store";
 
 export async function GET() {
-  return NextResponse.json(listActions());
+  const actions = await listActions();
+  return NextResponse.json(actions);
 }
 
 export async function POST(req: Request) {
@@ -15,9 +16,9 @@ export async function POST(req: Request) {
     if (action !== "delete" && action !== "anonymize") {
       return NextResponse.json({ error: "action must be 'delete' or 'anonymize'" }, { status: 400 });
     }
-    const pending = createAction(scanId, action);
+    const pending = await createAction(scanId, action);
     return NextResponse.json(pending, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  } catch (err) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

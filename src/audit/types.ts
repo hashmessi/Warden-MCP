@@ -4,7 +4,12 @@ export type AuditAction =
   | "APPROVED" 
   | "DENIED" 
   | "EXECUTED" 
-  | "ROLLED_BACK";
+  | "ROLLED_BACK"
+  | "EXECUTION_STARTED"
+  | "SNAPSHOT_TAKEN"
+  | "EXECUTION_COMPLETED"
+  | "EXECUTION_FAILED"
+  | "ROLLBACK_COMPLETED";
 
 export interface AuditEntry {
   id: number;

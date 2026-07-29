@@ -1,4 +1,5 @@
 import "dotenv/config";
+import http from "node:http";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -9,7 +10,9 @@ import { z } from "zod";
 import { scanSubject, getScanResult } from "./scanner.js";
 import { generateImpactReport } from "./impact/report.js";
 import { createPendingAction } from "./approval/store.js";
-import { initDb } from "./db/postgres.js";
+import { initDb, query } from "./db/postgres.js";
+import { pingMongo } from "./db/mongodb.js";
+import { config } from "./config.js";
 
 const server = new Server(
   { name: "warden", version: "1.0.0" },
@@ -165,7 +168,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
 
-    const scanResult = getScanResult(parsed.data.scan_id);
+    const scanResult = await getScanResult(parsed.data.scan_id);
     if (!scanResult) {
       return {
         content: [{ type: "text" as const, text: `Scan not found: ${parsed.data.scan_id}. Run scan_subject first.` }],
@@ -194,7 +197,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
 
-    const scanResult = getScanResult(parsed.data.scan_id);
+    const scanResult = await getScanResult(parsed.data.scan_id);
     if (!scanResult) {
       return {
         content: [{ type: "text" as const, text: `Scan not found: ${parsed.data.scan_id}. Run scan_subject first.` }],
@@ -262,9 +265,48 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   };
 });
 
+// --- Health HTTP Server ---
+/**
+ * Runs a lightweight HTTP server on PORT alongside the stdio MCP transport.
+ * Used by Railway/Render health checks and Docker HEALTHCHECK.
+ */
+function startHealthServer(): void {
+  const port = config.app.port;
+  const httpServer = http.createServer(async (req, res) => {
+    if (req.method === "GET" && req.url === "/health") {
+      try {
+        await query("SELECT 1");
+        const mongoOk = await pingMongo();
+
+        const body = JSON.stringify({
+          status: "ok",
+          version: "1.0.0",
+          postgres: "connected",
+          mongodb: mongoOk ? "connected" : "unreachable",
+          timestamp: new Date().toISOString(),
+        });
+
+        res.writeHead(mongoOk ? 200 : 207, { "Content-Type": "application/json" });
+        res.end(body);
+      } catch (err) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ status: "error", error: (err as Error).message }));
+      }
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
+
+  httpServer.listen(port, () => {
+    console.error(`[warden] Health endpoint: http://localhost:${port}/health`);
+  });
+}
+
 // --- Start ---
 async function main() {
   await initDb();
+  startHealthServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("[warden] MCP server running on stdio");

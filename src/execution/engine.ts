@@ -27,9 +27,9 @@ export async function executeAction(token: string): Promise<string> {
 
   const executionId = randomUUID();
 
-  const scanResult = getScanResult(approval.scanId);
+  const scanResult = await getScanResult(approval.scanId);
   if (!scanResult) {
-    throw new Error(`Scan result not found in memory: ${approval.scanId}`);
+    throw new Error(`Scan result not found (memory or DB): ${approval.scanId}`);
   }
 
   const actualIdentifier = scanResult.identifier;
@@ -96,6 +96,16 @@ export async function executeAction(token: string): Promise<string> {
 }
 
 export async function rollbackAction(executionId: string): Promise<void> {
+  // Guard: check if this execution has already been rolled back
+  const existing = await query<{ status: string }>(
+    `SELECT status FROM approvals WHERE execution_id = $1`,
+    [executionId]
+  );
+
+  if (existing.length > 0 && existing[0].status === "rolled_back") {
+    throw new Error(`Execution ${executionId} has already been rolled back`);
+  }
+
   // Execute rollback on all adapters
   const adapters = createAdapterRegistry();
   for (const adapter of adapters) {
@@ -103,7 +113,15 @@ export async function rollbackAction(executionId: string): Promise<void> {
     await adapter.restoreRecords(executionId);
     await logStep(executionId, "ROLLBACK", adapter.systemName, "completed");
   }
-  
+
+  // Update approval status to rolled_back (covers both MCP tool path and dashboard path)
+  if (existing.length > 0) {
+    await query(
+      `UPDATE approvals SET status = 'rolled_back' WHERE execution_id = $1`,
+      [executionId]
+    );
+  }
+
   await AuditLogger.appendLog({
     action: "ROLLBACK_COMPLETED",
     actor: "execution_engine",

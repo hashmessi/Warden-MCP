@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { resolveAction, getAction, updateActionStatus } from "../../../../lib/store";
+import { getAction, updateActionStatus } from "../../../../lib/store";
+import { requireDashboardSecret } from "../../../../lib/auth";
 import { exec } from "child_process";
 import { promisify } from "util";
 
@@ -9,6 +10,9 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const authError = requireDashboardSecret(req);
+  if (authError) return authError;
+
   const { token } = await params;
   try {
     const action = await getAction(token);
@@ -31,11 +35,15 @@ export async function POST(
       return NextResponse.json({ error: "Rollback failed", details: stderr }, { status: 500 });
     }
 
+    // Note: rollbackAction() in the engine also updates status to rolled_back,
+    // but we update here too for the dashboard path as a safety net.
     await updateActionStatus(token, "rolled_back");
 
     return NextResponse.json({ message: "Rollback completed", stdout });
   } catch (err) {
     const message = (err as Error).message;
-    return NextResponse.json({ error: message }, { status: 400 });
+    // Surface "already rolled back" as a 409
+    const status = message.includes("already been rolled back") ? 409 : 400;
+    return NextResponse.json({ error: message }, { status });
   }
 }

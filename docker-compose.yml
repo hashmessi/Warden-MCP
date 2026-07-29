@@ -35,6 +35,25 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  # Optional: Run seed data population after both DBs are healthy
+  # Usage: docker-compose --profile seed up
+  seed:
+    profiles: ["seed"]
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm ci --ignore-scripts && npm run seed"
+    environment:
+      POSTGRES_URL: postgresql://warden:warden_dev@postgres:5432/warden_db
+      MONGODB_URL: mongodb://mongodb:27017
+      MONGODB_DB: warden_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   mongo_data:

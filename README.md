@@ -1,3 +1,5 @@
+[![CI](https://github.com/<your-username>/warden/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/warden/actions/workflows/ci.yml)
+
 # 🛡 Warden
 
 **Trust infrastructure for AI-powered data operations.**
@@ -67,10 +69,11 @@ Audit log → every step is SHA-256 hash-chained, tamper-evident
 │  │  request_execution  │  execute_approved_action       │   │
 │  │  rollback_action                                     │   │
 │  └──────────────────────────────────────────────────────┘   │
+│  HTTP /health  (for Railway / Render / Docker monitoring)   │
 └──────┬──────────────────────────────┬───────────────────────┘
        │                              │
 ┌──────▼────────┐    ┌───────────────▼─────────────────────── ┐
-│  Data Adapters│    │         Ops Console (Next.js 16)        │
+│  Data Adapters│    │         Ops Console (Next.js)           │
 │               │    │                                         │
 │ · Postgres    │    │  Pending requests · Blast radius detail │
 │ · MongoDB     │    │  Approve / Deny · Rollback              │
@@ -88,7 +91,7 @@ Audit log → every step is SHA-256 hash-chained, tamper-evident
 └──────────────────────────────────────────────────────────── ┘
 ```
 
-**Databases:** PostgreSQL (user data, approvals, snapshots, audit log) + MongoDB (sessions, activity logs) + in-memory payment ledger stub.
+**Databases:** PostgreSQL (user data, approvals, snapshots, scans, audit log) + MongoDB (sessions, activity logs) + in-memory payment ledger stub.
 
 ---
 
@@ -98,6 +101,7 @@ Audit log → every step is SHA-256 hash-chained, tamper-evident
 |---------|---------------------|
 | **SHA-256 hash-chained audit log** | Tamper-evident — not just logged, but cryptographically proven. One tampered entry breaks all subsequent hashes. |
 | **Pre-execution snapshots** | Rollback is always possible because data is snapshotted before any mutation |
+| **Persistent scan state** | Scan results and impact reports are persisted to Postgres — server restarts don't lose mid-flow approval state |
 | **Blast radius preview** | Human sees exactly what breaks downstream (orphaned billing records, active sessions) before approving |
 | **Human-in-the-loop gate** | No irreversible action executes without explicit human approval — the architecture enforces this |
 | **MCP-native** | Works with Claude, custom agents, or any MCP-compatible client via stdio transport |
@@ -112,8 +116,9 @@ Audit log → every step is SHA-256 hash-chained, tamper-evident
 | MCP Server | TypeScript + `@modelcontextprotocol/sdk` | Native language for MCP, best SDK maturity |
 | Primary DB | PostgreSQL (`pg`) | Transactions for snapshot/rollback, relational for audit chain |
 | Secondary DB | MongoDB (`mongodb`) | Document store for sessions and flexible logs |
-| Dashboard | Next.js 16 + TailwindCSS 4 + React Query | SSR, API routes, live polling |
+| Dashboard | Next.js + TailwindCSS + React Query | SSR, API routes, live polling |
 | Audit integrity | Node.js `crypto` (SHA-256) | Built-in, no dependencies |
+| Deployment | Railway (server) + Vercel (dashboard) | Free tiers, zero DevOps |
 
 ---
 
@@ -136,6 +141,7 @@ npm run dev
 # 4. Start the MCP server for inspection (in a separate terminal, from project root)
 npx @modelcontextprotocol/inspector tsx src/index.ts
 # → MCP Inspector at http://localhost:6274
+# → Health check:    http://localhost:3001/health
 ```
 
 > **Note for Windows users:** Use separate PowerShell terminals for the dashboard and MCP server — they're two separate long-running processes.
@@ -173,32 +179,82 @@ npm run demo:tamper          # Corrupts one audit entry in Postgres
 
 ---
 
+## Deployment
+
+### Cloud (Railway + Vercel)
+
+```bash
+# 1. Provision databases
+#    Postgres: https://supabase.com (free tier)
+#    MongoDB:  https://cloud.mongodb.com (free M0 cluster)
+
+# 2. Deploy MCP server to Railway
+#    - Connect GitHub repo
+#    - Set env vars from .env.production.example
+#    - Railway auto-detects railway.toml → builds Dockerfile
+
+# 3. Deploy dashboard to Vercel
+#    - Connect GitHub repo, select 'dashboard' directory
+#    - Set POSTGRES_URL, MONGODB_URL, DASHBOARD_SECRET env vars in Vercel
+
+# 4. Seed production databases
+POSTGRES_URL=<prod-url> MONGODB_URL=<prod-url> npm run seed
+```
+
+See [`.env.production.example`](.env.production.example) for all required environment variables.
+
+---
+
 ## Project Structure
 
 ```
 warden/
 ├── src/
-│   ├── index.ts              # MCP server + 5 tool definitions
-│   ├── scanner.ts            # Multi-system scan fan-out
+│   ├── index.ts              # MCP server + 5 tools + HTTP /health endpoint
+│   ├── scanner.ts            # Multi-system scan fan-out (DB-persisted)
 │   ├── audit/
 │   │   └── logger.ts         # SHA-256 hash chain implementation
 │   ├── execution/
-│   │   └── engine.ts         # Snapshot + execute + rollback
+│   │   └── engine.ts         # Snapshot + execute + rollback (with status guard)
 │   ├── adapters/             # Postgres / MongoDB / Ledger adapters
-│   ├── approval/             # Approval store
+│   ├── approval/             # Approval store (Postgres-backed)
+│   ├── impact/               # Impact report engine (DB-persisted)
 │   └── scripts/
 │       └── tamper.ts         # Demo tamper script
 ├── dashboard/
 │   ├── app/
 │   │   ├── page.tsx          # Ops console UI
+│   │   ├── lib/
+│   │   │   └── auth.ts       # Dashboard API auth helper
 │   │   └── api/
-│   │       ├── approvals/    # Approval CRUD routes
+│   │       ├── health/       # Dashboard health endpoint
+│   │       ├── approvals/    # Approval CRUD routes (auth-protected)
 │   │       ├── audit-log/    # Live audit feed
 │   │       └── verify-integrity/ # Hash chain verification
+│   └── vercel.json           # Vercel deployment config
+├── .github/workflows/ci.yml  # GitHub Actions CI (typecheck + build)
+├── Dockerfile                # Multi-stage Node.js build
+├── railway.toml              # Railway deployment config
+├── docker-compose.yml        # Local dev: Postgres + MongoDB
+├── .env.example              # Local dev env template
+├── .env.production.example   # Production env template
 └── .planning/                # GSD planning artifacts
 ```
 
 ---
 
-*Built as a portfolio-grade demonstration of production governance patterns for AI agent ecosystems.*
+## Security Notes
+
+- Dashboard approve/deny/rollback routes are protected by `X-Dashboard-Secret` header (set `DASHBOARD_SECRET` in production)
+- Audit log subject identifiers are SHA-256 hashed — raw PII is never stored
+- Scan results and impact reports are persisted to Postgres; no plaintext PII stored beyond what the Postgres adapter itself holds
+- **Production auth:** For enterprise use, replace the shared-secret model with an IdP integration (Okta, Auth0, etc.) + NextAuth.js on the dashboard
+
+---
+
+*Built as a portfolio-grade demonstration of production governance patterns for AI agent ecosystems.*  
 *Every irreversible action requires a human decision. Every action is independently auditable with cryptographic proof.*
+
+## License
+
+[MIT](LICENSE)

@@ -78,6 +78,29 @@ export async function initDb(): Promise<void> {
     await client.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_log_prev_hash ON audit_log(prev_hash) WHERE prev_hash != 'GENESIS';
     `);
+
+    // v1.1: Persist scan results and impact reports so server restarts don't lose mid-flow state
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS scans (
+        scan_id UUID PRIMARY KEY,
+        identifier VARCHAR(255) NOT NULL,
+        scanned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        result JSONB NOT NULL
+      )
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_scans_identifier ON scans(identifier);
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS impact_reports (
+        report_id UUID PRIMARY KEY,
+        scan_id UUID NOT NULL REFERENCES scans(scan_id),
+        generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        report JSONB NOT NULL
+      )
+    `);
   });
 }
 

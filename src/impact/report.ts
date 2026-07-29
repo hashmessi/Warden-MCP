@@ -7,8 +7,9 @@ import type {
   RiskLevel,
 } from "./types.js";
 import { enrichWithNarrative } from "./llm.js";
+import { query } from "../db/postgres.js";
 
-// In-memory store: reportId → ImpactReport (Phase 5 reads from here)
+// In-memory hot cache: reportId → ImpactReport (primary lookup, DB is fallback)
 const reportStore = new Map<string, ImpactReport>();
 
 function computeRiskLevel(hits: DataHit[]): RiskLevel {
@@ -56,6 +57,7 @@ function recommendedActionFor(risk: RiskLevel): string {
 /**
  * Generates a structured ImpactReport from a ScanResult.
  * Deterministic template always works. LLM narrative is optional.
+ * Persists to Postgres so server restarts don't lose mid-flow state.
  */
 export async function generateImpactReport(
   scanResult: ScanResult
@@ -105,14 +107,49 @@ export async function generateImpactReport(
   // Optional LLM narrative — graceful fallback if unavailable
   const enrichedReport = await enrichWithNarrative(report);
 
+  // Hot cache — immediate availability
   reportStore.set(reportId, enrichedReport);
+
+  // Persist to Postgres — survives server restarts
+  try {
+    await query(
+      `INSERT INTO impact_reports (report_id, scan_id, generated_at, report)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (report_id) DO NOTHING`,
+      [reportId, scanResult.scanId, enrichedReport.generatedAt, JSON.stringify(enrichedReport)]
+    );
+  } catch (dbErr) {
+    console.error("[impact] Failed to persist report to DB:", dbErr);
+  }
+
   return enrichedReport;
 }
 
 /**
  * Retrieve a previously generated report by its reportId.
+ * Checks in-memory hot cache first, falls back to Postgres DB.
  * Used by Phase 5 (approval gate) and Phase 6 (execution).
  */
-export function getImpactReport(reportId: string): ImpactReport | undefined {
-  return reportStore.get(reportId);
+export async function getImpactReport(reportId: string): Promise<ImpactReport | undefined> {
+  // 1. Hot cache hit
+  if (reportStore.has(reportId)) {
+    return reportStore.get(reportId);
+  }
+
+  // 2. DB fallback (server restart or cross-process lookup)
+  try {
+    const rows = await query<{ report: ImpactReport }>(
+      `SELECT report FROM impact_reports WHERE report_id = $1`,
+      [reportId]
+    );
+    if (rows.length > 0) {
+      const report = rows[0].report;
+      reportStore.set(reportId, report);
+      return report;
+    }
+  } catch (err) {
+    console.error("[impact] DB fallback lookup failed:", err);
+  }
+
+  return undefined;
 }

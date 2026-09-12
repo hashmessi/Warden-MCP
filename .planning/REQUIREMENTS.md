@@ -10,21 +10,21 @@
 
 ### Week 1: Evaluation Harness & Measurable Invariants
 
-- [ ] **EVAL-01**: Comprehensive evaluation CLI harness executable via `npm run eval` producing structured terminal metrics
-- [ ] **EVAL-02**: Core Invariant 1: No data mutation can occur unless approval state is strictly valid and unconsumed
-- [ ] **EVAL-03**: Core Invariant 2: No duplicate or replayed execution can mutate state or create inconsistent audit records
-- [ ] **EVAL-04**: Core Invariant 3: Every executed mutation must be 100% restorable from its pre-execution snapshot
-- [ ] **EVAL-05**: Automated scenario test: NORMAL flow (valid deletion and multi-system purge verification)
-- [ ] **EVAL-06**: Automated scenario test: NO MATCH flow (non-existent subject handled gracefully with zero false positives)
-- [ ] **EVAL-07**: Automated scenario test: DUPLICATE flow (same request submitted twice handled idempotently)
-- [ ] **EVAL-08**: Automated scenario test: STALE TOKEN flow (expired or previously consumed token rejected)
-- [ ] **EVAL-09**: Automated scenario test: DENIED flow (denied execution request is permanently blocked from execution)
-- [ ] **EVAL-10**: Automated scenario test: DOUBLE APPROVAL & DOUBLE EXECUTION race conditions with lock serialization
-- [ ] **EVAL-11**: Automated scenario test: PARTIAL FAILURE (DB1 succeeds, DB2 fails -> compensation verified)
-- [ ] **EVAL-12**: Automated scenario test: ROLLBACK FAILURE (recovery failure handled with safe alert state)
-- [ ] **EVAL-13**: Automated scenario test: TAMPER detection (audit chain corruption detected and reported)
-- [ ] **EVAL-14**: Automated scenario test: CONCURRENT REQUESTS (simultaneous agent operations without deadlock)
-- [ ] **EVAL-15**: Evaluation scorecard reporting: Cases count, Passed, Failed, Critical failures, Rollback success %, Unauthorized exec, Duplicate exec, Audit tamper detection, and latency percentiles
+- [x] **EVAL-01**: Comprehensive evaluation CLI harness executable via `npm run eval` producing structured terminal metrics
+- [x] **EVAL-02**: Core Invariant 1: No data mutation can occur unless approval state is strictly valid and unconsumed
+- [x] **EVAL-03**: Core Invariant 2: No duplicate or replayed execution can mutate state or create inconsistent audit records
+- [x] **EVAL-04**: Core Invariant 3: Every executed mutation must be 100% restorable from its pre-execution snapshot
+- [x] **EVAL-05**: Automated scenario test: NORMAL flow (valid deletion and multi-system purge verification)
+- [x] **EVAL-06**: Automated scenario test: NO MATCH flow (non-existent subject handled gracefully with zero false positives)
+- [x] **EVAL-07**: Automated scenario test: DUPLICATE flow (same request submitted twice handled idempotently)
+- [x] **EVAL-08**: Automated scenario test: STALE TOKEN flow (expired or previously consumed token rejected)
+- [x] **EVAL-09**: Automated scenario test: DENIED flow (denied execution request is permanently blocked from execution)
+- [x] **EVAL-10**: Automated scenario test: DOUBLE APPROVAL & DOUBLE EXECUTION race conditions with lock serialization
+- [x] **EVAL-11**: Automated scenario test: PARTIAL FAILURE (DB1 succeeds, DB2 fails -> compensation verified)
+- [x] **EVAL-12**: Automated scenario test: ROLLBACK FAILURE (recovery failure handled with safe alert state)
+- [x] **EVAL-13**: Automated scenario test: TAMPER detection (audit chain corruption detected and reported)
+- [x] **EVAL-14**: Automated scenario test: CONCURRENT REQUESTS (simultaneous agent operations without deadlock)
+- [x] **EVAL-15**: Evaluation scorecard reporting: Cases count, Passed, Failed, Critical failures, Rollback success %, Unauthorized exec, Duplicate exec, Audit tamper detection, and latency percentiles
 
 ### Week 2: Adversarial Threat Model & Attack Suite
 
@@ -83,7 +83,7 @@
 
 | Requirement | Phase | Status |
 |---|---|---|
-| EVAL-01..15 | Phase 8 (Week 1) | ⏳ Planned |
+| EVAL-01..15 | Phase 8 (Week 1) | ✅ Complete |
 | ATTK-01..06 | Phase 9 (Week 2) | ⏳ Planned |
 | ARCH-01..07 | Phase 10 (Week 3) | ⏳ Planned |
 | AGNT-01..05 | Phase 11 (Week 4) | ⏳ Planned |

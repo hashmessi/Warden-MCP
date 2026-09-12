@@ -1,4 +1,4 @@
-export type ApprovalStatus = "pending" | "approved" | "denied" | "executed" | "rolled_back";
+export type ApprovalStatus = "pending" | "approved" | "denied" | "executing" | "executed" | "rolled_back";
 export type ExecutionAction = "delete" | "anonymize";
 
 export interface PendingAction {

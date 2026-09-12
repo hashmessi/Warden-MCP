@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: "4-Week War Plan: Enterprise Hardening & Adversarial Resilience"
-status: "Defining requirements"
-last_updated: "2026-09-12T19:30:00.000Z"
+status: "Phase 8 complete"
+last_updated: "2026-09-13T00:35:00.000Z"
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State: Warden
@@ -18,20 +18,20 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-09-12)
 
 **Core value:** Every irreversible action requires a human decision, and every action is independently auditable with cryptographic proof.
-**Current focus:** Initializing Milestone v2.0 requirements and roadmap
+**Current focus:** Phase 09 — Break Warden (Adversarial Threat Model & Attack Suite)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-09-12 — Milestone v2.0 started
+Phase: Phase 08 Complete -> Ready for Phase 09
+Plan: Complete (3/3 plans executed)
+Status: Phase 8 Verified
+Last activity: 2026-09-13 — Phase 8 Evaluation Harness completed with 12/12 cases passing.
 
 ## Milestone v2.0: 4-Week War Plan
 
 | Phase | Week | Name | Status |
 |---|---|---|---|
-| 08 | Week 1 | Turn Warden into a Measurable System (Evaluation Harness) | ⏳ Not Started |
+| 08 | Week 1 | Turn Warden into a Measurable System (Evaluation Harness) | ✅ Complete |
 | 09 | Week 2 | Break Warden (Adversarial Threat Model & Attack Suite) | ⏳ Not Started |
 | 10 | Week 3 | Production-Shaped Architecture (RBAC, Quorum, State Machine, Compensation) | ⏳ Not Started |
 | 11 | Week 4 | AI-Native Control Layer & Governed Autonomy Boundary | ⏳ Not Started |
@@ -53,6 +53,10 @@ Last activity: 2026-09-12 — Milestone v2.0 started
 | Remediated 6 senior developer codebase review findings | Remediation | 2026-07-23 |
 | Devops hardening: Postgres state persistence for scans/reports, secret guard, Docker CI/CD | v1.1 | 2026-07-29 |
 | 4-Week War Plan: Measurable Evals, Adversarial Attacks, Production Architecture, AI Control | v2.0 Init | 2026-09-12 |
+| Phase 8: Dynamic subject isolation (eval-<uuid>@warden.test) preserves demo data | Phase 8 | 2026-09-13 |
+| Phase 8: Atomic SQL CAS row lock on approvals table (approved -> executing) prevents double execution | Phase 8 | 2026-09-13 |
+| Phase 8: Retry backoff with jitter on AuditLogger.appendLog eliminates concurrent conflict dropouts | Phase 8 | 2026-09-13 |
+| Phase 8: Transparent FaultInjectionAdapter proxy wrapper for declarative multi-store failure tests | Phase 8 | 2026-09-13 |
 
 ## Accumulated Context
 

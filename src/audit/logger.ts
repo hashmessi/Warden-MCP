@@ -28,53 +28,114 @@ export class AuditLogger {
    */
   public static async appendLog(params: CreateAuditEntryParams): Promise<AuditEntry> {
     const subjectHash = params.subject ? hashIdentifier(params.subject) : null;
-    
-    // We fetch the last hash first, but the actual insert enforces it to avoid race conditions.
-    const lastLogResult = await query<{ hash: string }>(
-      `SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1`
-    );
-    const expectedPrevHash = lastLogResult.length > 0 ? lastLogResult[0].hash : "GENESIS";
-    
-    // Calculate new hash
-    const newHash = computeAuditHash(
-      params.action,
-      params.actor,
-      subjectHash,
-      params.details,
-      expectedPrevHash
-    );
+    const maxRetries = 5;
+    let attempt = 0;
 
-    try {
-      // Enforce integrity at insert time
-      const insertResult = await query<AuditEntry>(
-        `WITH last_log AS (
-          SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1
-        )
-        INSERT INTO audit_log (action, actor, subject_hash, details, prev_hash, hash)
-        SELECT $1, $2, $3, $4, COALESCE((SELECT hash FROM last_log), 'GENESIS'), $5
-        WHERE $6 = COALESCE((SELECT hash FROM last_log), 'GENESIS')
-        RETURNING *;`,
-        [
-          params.action,
-          params.actor,
-          subjectHash,
-          params.details,
-          newHash,
-          expectedPrevHash
-        ]
+    while (attempt < maxRetries) {
+      attempt++;
+
+      // We fetch the latest hash to link to
+      const lastLogResult = await query<{ hash: string }>(
+        `SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1`
+      );
+      const expectedPrevHash = lastLogResult.length > 0 ? lastLogResult[0].hash : "GENESIS";
+
+      // Calculate new hash based on the fresh prevHash
+      const newHash = computeAuditHash(
+        params.action,
+        params.actor,
+        subjectHash,
+        params.details,
+        expectedPrevHash
       );
 
-      if (insertResult.length === 0) {
-        throw new Error("Hash chain integrity violation: prev_hash mismatch");
+      try {
+        // Enforce integrity at insert time
+        const insertResult = await query<AuditEntry>(
+          `WITH last_log AS (
+            SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1
+          )
+          INSERT INTO audit_log (action, actor, subject_hash, details, prev_hash, hash)
+          SELECT $1, $2, $3, $4, COALESCE((SELECT hash FROM last_log), 'GENESIS'), $5
+          WHERE $6 = COALESCE((SELECT hash FROM last_log), 'GENESIS')
+          RETURNING *;`,
+          [
+            params.action,
+            params.actor,
+            subjectHash,
+            params.details,
+            newHash,
+            expectedPrevHash,
+          ]
+        );
+
+        if (insertResult.length > 0) {
+          return insertResult[0];
+        }
+
+        // If insertResult is empty, another worker committed a row concurrently; back off and retry
+        await new Promise((resolve) => setTimeout(resolve, 10 + Math.random() * 25));
+      } catch (err: any) {
+        if (err.code === "23505") {
+          // Unique constraint violation (hash chain conflict); back off and retry
+          await new Promise((resolve) => setTimeout(resolve, 10 + Math.random() * 25));
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    throw new Error("Audit log append failed after max retries due to heavy concurrent write contention");
+  }
+
+  /**
+   * Cryptographically verifies the entire audit log hash chain.
+   * Detects any altered data, truncated records, or broken links.
+   */
+  public static async verifyIntegrity(): Promise<{
+    valid: boolean;
+    total: number;
+    brokenAt?: number;
+    details?: string;
+  }> {
+    const rows = await query<any>(
+      `SELECT id, action, actor, subject_hash, details, prev_hash, hash
+       FROM audit_log ORDER BY id ASC`
+    );
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const expectedPrevHash = i === 0 ? "GENESIS" : rows[i - 1].hash;
+
+      if (row.prev_hash !== expectedPrevHash) {
+        return {
+          valid: false,
+          total: rows.length,
+          brokenAt: row.id,
+          details: `Prev hash mismatch at row ${row.id}: expected ${expectedPrevHash.slice(0, 8)}, got ${row.prev_hash?.slice(0, 8)}`,
+        };
       }
 
-      return insertResult[0];
-    } catch (err: any) {
-      if (err.code === "23505") { // Unique constraint violation in Postgres
-        throw new Error("Concurrent hash chain append conflict: prev_hash or hash already exists");
+      const computed = computeAuditHash(
+        row.action,
+        row.actor,
+        row.subject_hash,
+        row.details,
+        row.prev_hash
+      );
+
+      if (computed !== row.hash) {
+        return {
+          valid: false,
+          total: rows.length,
+          brokenAt: row.id,
+          details: `Hash mismatch at row ${row.id}: computed ${computed.slice(0, 8)}, stored ${row.hash?.slice(0, 8)}`,
+        };
       }
-      throw err;
     }
+
+    return { valid: true, total: rows.length };
   }
 }
+
 

@@ -17,3 +17,6 @@ Thumbs.db
 # IDE
 .vscode/
 *.swp
+
+# Evaluation artifacts
+.eval-results/

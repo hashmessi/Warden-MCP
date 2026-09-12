@@ -9,12 +9,12 @@
 
 ## Phase Overview
 
-| # | Week | Phase | Goal | Requirements | Success Criteria |
-|---|---|---|---|---|---|
-| 8 | Week 1 | Turn Warden into a Measurable System | Build evaluation harness (`npm run eval`), 11 automated failure scenarios, core invariant checks, and terminal scorecard | EVAL-01..15 | 4 |
-| 9 | Week 2 | Break Warden (Adversarial Attack Suite) | Threat model (`docs/THREAT_MODEL.md`) and 27-case empirical attack test suite across 4 attack classes | ATTK-01..06 | 4 |
-| 10 | Week 3 | Production-Shaped Architecture | RBAC authorization, multi-approver quorum policy, formal state machine, and distributed compensation engine | ARCH-01..07 | 4 |
-| 11 | Week 4 | AI-Native Control Layer | Governed autonomous agent orchestration with strict capability boundary and end-to-end evaluation pipeline | AGNT-01..05 | 4 |
+| # | Week | Phase | Goal | Requirements | Status | Success Criteria |
+|---|---|---|---|---|---|---|
+| 8 | Week 1 | Turn Warden into a Measurable System | Build evaluation harness (`npm run eval`), 11 automated failure scenarios, core invariant checks, and terminal scorecard | EVAL-01..15 | ✅ Complete | 4/4 |
+| 9 | Week 2 | Break Warden (Adversarial Attack Suite) | Threat model (`docs/THREAT_MODEL.md`) and 27-case empirical attack test suite across 4 attack classes | ATTK-01..06 | ⏳ Planned | 4 |
+| 10 | Week 3 | Production-Shaped Architecture | RBAC authorization, multi-approver quorum policy, formal state machine, and distributed compensation engine | ARCH-01..07 | ⏳ Planned | 4 |
+| 11 | Week 4 | AI-Native Control Layer | Governed autonomous agent orchestration with strict capability boundary and end-to-end evaluation pipeline | AGNT-01..05 | ⏳ Planned | 4 |
 
 ---
 

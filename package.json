@@ -11,7 +11,8 @@
     "start": "node dist/index.js",
     "demo:tamper": "tsx src/scripts/tamper.ts",
     "test:e2e": "tsx src/scripts/verify-e2e.ts",
-    "eval": "tsx src/eval/index.ts"
+    "eval": "tsx src/eval/index.ts",
+    "eval:stress": "tsx src/eval/stress.ts"
   },
   "keywords": [],
   "author": "",

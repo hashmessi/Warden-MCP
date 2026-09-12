@@ -132,7 +132,7 @@ export class PostgresAdapter implements DataAdapter {
 
   async restoreRecords(executionId: string): Promise<number> {
     const snapshots = await query<{ record_id: string; data: any }>(
-      `SELECT record_id, data FROM snapshots WHERE execution_id = $1 AND source_system = 'postgres'`,
+      `SELECT record_id, data FROM snapshots WHERE execution_id = $1 AND source_system = 'postgres' ORDER BY id ASC`,
       [executionId]
     );
 
@@ -149,6 +149,7 @@ export class PostgresAdapter implements DataAdapter {
         restored++;
       } catch (err) {
         console.error(`[postgres] Failed to restore to ${table}:`, err);
+        throw new Error(`Postgres restore failed for ${table}: ${(err as any).message}`);
       }
     }
     return restored;

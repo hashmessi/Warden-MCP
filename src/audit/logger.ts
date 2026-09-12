@@ -28,7 +28,7 @@ export class AuditLogger {
    */
   public static async appendLog(params: CreateAuditEntryParams): Promise<AuditEntry> {
     const subjectHash = params.subject ? hashIdentifier(params.subject) : null;
-    const maxRetries = 5;
+    const maxRetries = 12;
     let attempt = 0;
 
     while (attempt < maxRetries) {
@@ -74,11 +74,13 @@ export class AuditLogger {
         }
 
         // If insertResult is empty, another worker committed a row concurrently; back off and retry
-        await new Promise((resolve) => setTimeout(resolve, 10 + Math.random() * 25));
+        const backoffMs = Math.min(250, 8 * Math.pow(1.3, attempt) + Math.random() * 30);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
       } catch (err: any) {
         if (err.code === "23505") {
           // Unique constraint violation (hash chain conflict); back off and retry
-          await new Promise((resolve) => setTimeout(resolve, 10 + Math.random() * 25));
+          const backoffMs = Math.min(250, 8 * Math.pow(1.3, attempt) + Math.random() * 30);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
           continue;
         }
         throw err;

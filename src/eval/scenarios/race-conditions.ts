@@ -31,12 +31,12 @@ export const raceConditionsScenario: EvalScenario = {
       const approvalSuccesses = approvalSettled.filter((s) => s.status === "fulfilled");
       const approvalFailures = approvalSettled.filter((s) => s.status === "rejected");
 
-      // Verify token in store is validly approved
+      // Verify token in store is validly approved and exactly ONE approver succeeded
       const finalApproval = await getApprovalByToken(pending.token);
       const approvalRacePassed =
         finalApproval?.status === "approved" &&
-        approvalSuccesses.length >= 1 &&
-        approvalSuccesses.length + approvalFailures.length === approvalAttempts;
+        approvalSuccesses.length === 1 &&
+        approvalFailures.length === approvalAttempts - 1;
 
       results.push({
         id: "case-race-01",

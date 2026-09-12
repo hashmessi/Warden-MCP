@@ -115,27 +115,42 @@ export async function cleanupTestSubject(subject: ScenarioSubject): Promise<void
     // Cascade on users handles user_profiles, subscriptions, user_activity
     await query(`DELETE FROM users WHERE email = $1 OR id = $2`, [subject.email, subject.userId]);
     
-    // Clean snapshots and approvals
-    await query(`
-      DELETE FROM snapshots 
-      WHERE execution_id IN (
-        SELECT execution_id FROM approvals 
-        WHERE scan_id IN (SELECT scan_id::text FROM scans WHERE identifier = $1)
-        AND execution_id IS NOT NULL
-      )
-    `, [subject.email]);
+    // Find execution IDs directly from snapshots containing this subject's identity
+    const directSnaps = await query<{ execution_id: string }>(
+      `SELECT DISTINCT execution_id FROM snapshots 
+       WHERE data->>'email' = $1 OR data->>'user_id' = $2 OR data->>'id' = $2`,
+      [subject.email, subject.userId]
+    );
+    const directExecutionIds = directSnaps.map((s) => s.execution_id);
 
-    await query(`
-      DELETE FROM impact_reports 
-      WHERE scan_id IN (SELECT scan_id FROM scans WHERE identifier = $1)
-    `, [subject.email]);
+    // Find all scan IDs associated with this subject
+    const scans = await query<{ scan_id: string }>(
+      `SELECT scan_id::text FROM scans WHERE identifier = $1`,
+      [subject.email]
+    );
+    const scanIds = scans.map((s) => s.scan_id);
 
-    await query(`
-      DELETE FROM approvals 
-      WHERE scan_id IN (SELECT scan_id::text FROM scans WHERE identifier = $1)
-    `, [subject.email]);
+    let allExecutionIds = [...directExecutionIds];
+    if (scanIds.length > 0) {
+      const approvals = await query<{ execution_id: string }>(
+        `SELECT execution_id FROM approvals WHERE scan_id = ANY($1) AND execution_id IS NOT NULL`,
+        [scanIds]
+      );
+      allExecutionIds.push(...approvals.map((a) => a.execution_id).filter(Boolean));
+    }
 
-    await query(`DELETE FROM scans WHERE identifier = $1`, [subject.email]);
+    allExecutionIds = [...new Set(allExecutionIds)];
+
+    if (allExecutionIds.length > 0) {
+      await query(`DELETE FROM execution_steps WHERE execution_id = ANY($1)`, [allExecutionIds]);
+      await query(`DELETE FROM snapshots WHERE execution_id = ANY($1)`, [allExecutionIds]);
+    }
+
+    if (scanIds.length > 0) {
+      await query(`DELETE FROM impact_reports WHERE scan_id::text = ANY($1)`, [scanIds]);
+      await query(`DELETE FROM approvals WHERE scan_id = ANY($1)`, [scanIds]);
+      await query(`DELETE FROM scans WHERE scan_id::text = ANY($1)`, [scanIds]);
+    }
 
     // 2. Clean MongoDB
     const mongoDb = await getMongoDb();

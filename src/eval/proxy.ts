@@ -62,7 +62,7 @@ export function createFaultProxy(target: DataAdapter): FaultInjectionAdapter {
     },
 
     reset(): void {
-      failureRules.clear;
+      failureRules.clear();
       delayRules.clear();
       callCounters.clear();
     },

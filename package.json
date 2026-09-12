@@ -12,7 +12,8 @@
     "demo:tamper": "tsx src/scripts/tamper.ts",
     "test:e2e": "tsx src/scripts/verify-e2e.ts",
     "eval": "tsx src/eval/index.ts",
-    "eval:stress": "tsx src/eval/stress.ts"
+    "eval:stress": "tsx src/eval/stress.ts",
+    "eval:mutation": "tsx src/eval/mutation.ts"
   },
   "keywords": [],
   "author": "",

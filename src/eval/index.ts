@@ -13,10 +13,15 @@ async function main(): Promise<void> {
   // Ensure DB schemas and tables exist
   await initDb();
 
+  const scenarioFilter = process.argv.find((a) => a.startsWith("--scenario="))?.split("=")[1];
+  const scenariosToRun = scenarioFilter
+    ? allScenarios.filter((s) => s.id.includes(scenarioFilter) || s.name.toLowerCase().includes(scenarioFilter.toLowerCase()))
+    : allScenarios;
+
   const allResults: EvalCaseResult[] = [];
   const suiteStartTime = Date.now();
 
-  for (const scenario of allScenarios) {
+  for (const scenario of scenariosToRun) {
     process.stdout.write(`  ▶ Running ${scenario.name}... `);
     const scenarioStart = Date.now();
     try {
